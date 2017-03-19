@@ -1,22 +1,22 @@
 # COMP390
 Co-evolution With Nash-Memory
 
-Main:
+  Main:
 
-  while iteration not end:
+    while iteration not end:
   
-    Mutate Classifiers and Models (Using support set form last iteration)
+      Mutate Classifiers and Models (Using support set form last iteration)
     
-    Calculate Fitness
+      Calculate Fitness
     
-    Sort by Fitness
+      Sort by Fitness
     
-    Find Best Response
+      Find Best Response
     
-    If best response is good:
+      If best response is good:
     
-      apply nash method to update WMN sets
+        apply nash method to update WMN sets
       
-    else:
+      else:
     
-      skip to next iteration
+        skip to next iteration
