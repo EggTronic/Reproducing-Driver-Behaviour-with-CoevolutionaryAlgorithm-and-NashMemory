@@ -70,7 +70,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			j = 0
 
 			result = c.classify(car_following_model,classfy_times,time_step,noise,1)
-			if result == True:
+			if result >= 0.5:
 				c.fitness += len(models)
 
 			for m in models:
@@ -78,7 +78,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 				print('------------------------|c',i,'| m',j,'|----------------------------')
 				print(m.pars)
 				result = c.classify(m,classfy_times,time_step,noise,0)
-				if result == False:
+				if result < 0.5:
 					c.fitness += 1
 				else:
 					m.fitness += 1
@@ -96,7 +96,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			r = []
 			for c in mixedClassifier.support():
 				result = c.classify(m,classfy_times,time_step,noise,0)
-				if result == False:
+				if result < 0.5:
 					r.append(1)
 				else:
 					r.append(0)
@@ -115,7 +115,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		payoff_real_model = 0
 		for c in mixedClassifier.support():
 			result = c.classify(car_following_model,classfy_times,time_step,noise,1)
-			if result == True:
+			if result >= 0.5:
 				payoff_real_model += 1*mixedClassifier.pars_percentage[c]
 		payoff_real_model = payoff_real_model*0.5
 
@@ -195,7 +195,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		ac = 0
 		for j in range(len(classifiers_top10)):
 			result = classifiers_top10[j].classify(car_following_model,classfy_times,time_step,noise,1)
-			if result == True:
+			if result >= 0.5:
 				ac += 1*variables[j]
 		acc += ac * 0.5
 		prob += v == acc
@@ -230,7 +230,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			r = []
 			for c in classifierAgent.piN.support():
 				result = c.classify(models[i],classfy_times,time_step,noise,0)
-				if result == False:
+				if result < 0.5:
 					r.append(1)
 				else:
 					r.append(0)
@@ -246,7 +246,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			r = []
 			for i in range(len(classifiers)-10,len(classifiers)):
 				result = classifiers[i].classify(m,classfy_times,time_step,noise,0)
-				if result == False:
+				if result < 0.5:
 					r.append(1)
 				else:
 					r.append(0)
@@ -280,7 +280,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 				row = [] # a row
 				for c in classifierAgent.WMN:
 					result = c.classify(m,classfy_times,time_step,noise,0)
-					if result == False:
+					if result < 0.5:
 						row.append(1)
 					else:
 						row.append(0)
@@ -289,7 +289,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			row = []
 			for c in classifierAgent.WMN:
 				result = c.classify(car_following_model,classfy_times,time_step,noise,1)
-				if result == True:
+				if result >= 0.5:
 					row.append(1)
 				else:
 					row.append(0)
@@ -403,7 +403,8 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			classifiers[:] = list(classifierAgent.piN.support())
 			#print(len(classifiers))
 
-	def drawPlots(models,car_following_model,iteration,plots,l1,l2,l3,l4,l5,l6,l,lt):
+	def drawPlots(classifiers,models,car_following_model,iteration,plots,l1,l2,l3,l4,l5,l6,l7,l8,l,lt):
+		# Pars Covergent Plot
 		sum_par1 = 0
 		sum_par2 = 0
 		sum_par3 = 0
@@ -443,15 +444,33 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		l.append(variance)
 		lt.append(iteration)
 
-		plt.plot(lt, l1)
-		plt.plot(lt, l2)
-		plt.plot(lt, l3)
-		plt.plot(lt, l4)
-		plt.plot(lt, l5)
-		plt.plot(lt, l6)
-		plt.plot(lt, l)
+		p1.plot(lt, l1)
+		p1.plot(lt, l2)
+		p1.plot(lt, l3)
+		p1.plot(lt, l4)
+		p1.plot(lt, l5)
+		p1.plot(lt, l6)
+		p1.plot(lt, l)
+		p1.legend(['par1','par2','par3','par4','par5','par6','pars'])
 
-		plt.legend(['par1','par2','par3','par4','par5','par6','pars'])
+		# Classifier Covergent Plot
+		judge_sum1 = 0
+		judge_sum2 = 0
+		for c in classifiers:
+			judge_sum1 += c.classify(car_following_model,classfy_times,time_step,noise,1)
+			for m in models:
+				judge_sum2 += c.classify(m,classfy_times,time_step,noise,0)
+
+		judge_avg1 = judge_sum1/len(classifiers)
+		judge_avg2 = judge_sum2/(len(classifiers)*len(models))
+
+		l7.append(judge_avg1)
+		l8.append(judge_avg2)
+
+		p2.plot(lt,l7,color='blue')
+		p2.plot(lt,l8,color='red')
+		p2.legend(['real model','fake model'])
+
 		plots.canvas.draw()
 		plt.pause(0.0001)
 
@@ -474,14 +493,12 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 	modelAgent = Agent(model_init,'model')
 	classifierAgent = Agent(classifiers,'classifier')
 
-	plt.xlabel('Iteration')
-	plt.ylabel('Covergency')
-	plt.xlim(1, iteration_round)
-	plt.title('Covevolve results')
-
-
+	f, (p1, p2, p3) = plt.subplots(3, sharex=True)
+	plt.xlim(1,iteration_round)
 	plots = plt.gcf()
-
+	p1.set_title('Pars_Covergency')
+	p2.set_title('Classifier_Covergency')
+	p3.set_title('Behaviour_Covergency')
 	plots.show()
 	plots.canvas.draw()
 
@@ -492,6 +509,8 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 	l4 = []
 	l5 = []
 	l6 = []
+	l7 = []
+	l8 = []
 	lt = []
 
 	print(len(modelAgent.piN.support()))
@@ -523,7 +542,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 
 		# Nash Memory
 		nash(modelAgent,classifierAgent,models,classifiers,car_following_model)
-		drawPlots(models,car_following_model,count,plots,l1,l2,l3,l4,l5,l6,l,lt)
+		drawPlots(classifiers,models,car_following_model,count,plots,l1,l2,l3,l4,l5,l6,l7,l8,l,lt)
 
 	pp = PdfPages('plots2.pdf')
 	plt.savefig(pp, format='pdf')

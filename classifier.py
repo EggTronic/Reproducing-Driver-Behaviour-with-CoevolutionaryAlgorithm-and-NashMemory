@@ -56,10 +56,7 @@ class Classifier (object):
 		judge = out_put[0][0]
 
 		print(judge)
-		if judge >= 0.5:
-			return True
-		else:
-			return False
+		return judge
 
 class  MixedClassifier (object):
 	def __init__ (self):
