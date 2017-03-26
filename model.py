@@ -14,6 +14,7 @@ class Model (object):
 		self.fitness = 0
 		self.survival_chance = 3
 		self.state = State()
+		self.behaviour = []
 
 	def __eq__(self, other): 
 		return (self.pars == other.pars)
@@ -22,6 +23,7 @@ class Model (object):
 			return hash(str(self.pars))
 
 	def updateState(self, classfy_times, time_step):
+		self.behaviour = []
 		count = 0
 		input_matrix = []
 		while count < classfy_times:
@@ -32,6 +34,7 @@ class Model (object):
 				time_head_way = (self.state.leader.position - self.state.follower.position)/self.state.follower.speed
 			# Free Driving
 			if time_head_way > 3.5:
+				self.behaviour.append(0)
 				#print('Free')
 				if (self.state.follower.speed < 40):
 					self.state.follower.acceleration = self.getNormalAcceleration()
@@ -40,6 +43,7 @@ class Model (object):
 
 			# Car Following
 			if (time_head_way <= 3.5) and (time_head_way > 0.5):
+				self.behaviour.append(1)
 				#print('Follow')
 				# print(self.pars)
 				# print(self.state.follower.speed)
@@ -51,6 +55,7 @@ class Model (object):
 
 			# Emergency
 			if (time_head_way <= 0.5):
+				self.behaviour.append(2)
 				#print('Emergency')
 				deceleration1 = self.getNormalDeceleration()
 

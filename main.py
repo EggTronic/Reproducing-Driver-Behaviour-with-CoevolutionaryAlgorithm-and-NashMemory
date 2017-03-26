@@ -403,7 +403,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			classifiers[:] = list(classifierAgent.piN.support())
 			#print(len(classifiers))
 
-	def drawPlots(classifiers,models,car_following_model,iteration,plots,l1,l2,l3,l4,l5,l6,l7,l8,l,lt):
+	def drawPlots(classifiers,models,car_following_model,iteration,plots,l1,l2,l3,l4,l5,l6,l7,l8,l9,l,lt):
 		# Pars Covergent Plot
 		sum_par1 = 0
 		sum_par2 = 0
@@ -471,6 +471,15 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		p2.plot(lt,l8,color='red')
 		p2.legend(['real model','fake model'])
 
+		behaviour_variacne = 0
+		for m in models:
+			for b1,b2 in zip(m.behaviour,car_following_model.behaviour):
+				behaviour_variacne += math.pow((b1-b2),2)
+
+		l9.append(behaviour_variacne/len(models))
+		p3.plot(lt,l9,color='black')
+		p3.legend(['Behaviour_variacne'])
+
 		plots.canvas.draw()
 		plt.pause(0.0001)
 
@@ -511,6 +520,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 	l6 = []
 	l7 = []
 	l8 = []
+	l9 = []
 	lt = []
 
 	print(len(modelAgent.piN.support()))
@@ -542,7 +552,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 
 		# Nash Memory
 		nash(modelAgent,classifierAgent,models,classifiers,car_following_model)
-		drawPlots(classifiers,models,car_following_model,count,plots,l1,l2,l3,l4,l5,l6,l7,l8,l,lt)
+		drawPlots(classifiers,models,car_following_model,count,plots,l1,l2,l3,l4,l5,l6,l7,l8,l9,l,lt)
 
 	pp = PdfPages('plots2.pdf')
 	plt.savefig(pp, format='pdf')
