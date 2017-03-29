@@ -478,7 +478,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 
 		l9.append(behaviour_variacne/len(models))
 		p3.plot(lt,l9,color='black')
-		p3.legend(['Behaviour_variacne'])
+		p3.legend(['Behaviour Variacne'])
 
 		plots.canvas.draw()
 		plt.pause(0.0001)
@@ -521,6 +521,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 	l7 = []
 	l8 = []
 	l9 = []
+	l10 = []
 	lt = []
 
 	print(len(modelAgent.piN.support()))
@@ -554,7 +555,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		nash(modelAgent,classifierAgent,models,classifiers,car_following_model)
 		drawPlots(classifiers,models,car_following_model,count,plots,l1,l2,l3,l4,l5,l6,l7,l8,l9,l,lt)
 
-	pp = PdfPages('plots2.pdf')
+	pp = PdfPages('5-200-1-20-False-10-10h.pdf')
 	plt.savefig(pp, format='pdf')
 	pp.close()
 	print(len(modelAgent.piN.support()))
@@ -570,7 +571,7 @@ def main():
 
 	model_number = 5
 	classifier_number = 5
-	iteration_round = 100
+	iteration_round = 200
 	time_step = 1
 	classfy_times = 20
 	noise = False

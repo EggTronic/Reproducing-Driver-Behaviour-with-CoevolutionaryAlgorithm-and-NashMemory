@@ -15,6 +15,7 @@ class Model (object):
 		self.survival_chance = 3
 		self.state = State()
 		self.behaviour = []
+		self.accelerations = []
 
 	def __eq__(self, other): 
 		return (self.pars == other.pars)
@@ -22,8 +23,9 @@ class Model (object):
 	def __hash__(self):
 			return hash(str(self.pars))
 
-	def updateState(self, classfy_times, time_step):
+	def updateState(self, classfy_times, time_step, noise):
 		self.behaviour = []
+		self.accelerations = []
 		count = 0
 		input_matrix = []
 		while count < classfy_times:
@@ -40,6 +42,7 @@ class Model (object):
 					self.state.follower.acceleration = self.getNormalAcceleration()
 				else:
 					self.state.follower.acceleration = self.getNormalDeceleration()
+				
 
 			# Car Following
 			if (time_head_way <= 3.5) and (time_head_way > 0.5):
@@ -52,6 +55,7 @@ class Model (object):
 					self.state.follower.acceleration = (self.pars[0]*math.pow(self.state.follower.speed, self.pars[1])*self.state.speedDiff())/math.pow(self.state.distanceDiff(), self.pars[2])
 				else:
 					self.state.follower.acceleration = (self.pars[3]*math.pow(self.state.follower.speed, self.pars[4])*self.state.speedDiff())/math.pow(self.state.distanceDiff(), self.pars[5])
+
 
 			# Emergency
 			if (time_head_way <= 0.5):
@@ -66,15 +70,22 @@ class Model (object):
 						deceleration2 = self.state.leader.acceleration - 0.5*math.pow(self.state.speedDiff(), 2)/self.state.distanceDiff()
 				else:
 					deceleration2 = self.state.leader.acceleration + 0.25*deceleration1
-
 				self.state.follower.acceleration = min(deceleration1, deceleration2)
 
+			self.accelerations.append(self.state.follower.acceleration)
 			self.state.update(time_step)
-			input_matrix.append(np.float32(self.state.leader.speed))
-			input_matrix.append(np.float32(self.state.leader.position))
-			input_matrix.append(np.float32(self.state.follower.speed))
-			input_matrix.append(np.float32(self.state.follower.acceleration))
-			input_matrix.append(np.float32(self.state.follower.position))
+			if noise == True:
+				input_matrix.append(np.float32(self.state.leader.speed*random.uniform(0.95,1.05)))
+				input_matrix.append(np.float32(self.state.leader.position*random.uniform(0.95,1.05)))
+				input_matrix.append(np.float32(self.state.follower.speed*random.uniform(0.95,1.05)))
+				input_matrix.append(np.float32(self.state.follower.acceleration*random.uniform(0.95,1.05)))
+				input_matrix.append(np.float32(self.state.follower.position*random.uniform(0.95,1.05)))
+			else:
+				input_matrix.append(np.float32(self.state.leader.speed))
+				input_matrix.append(np.float32(self.state.leader.position))
+				input_matrix.append(np.float32(self.state.follower.speed))
+				input_matrix.append(np.float32(self.state.follower.acceleration))
+				input_matrix.append(np.float32(self.state.follower.position))
 			#input_matrix.append(input_row)
 			count += 1
 			

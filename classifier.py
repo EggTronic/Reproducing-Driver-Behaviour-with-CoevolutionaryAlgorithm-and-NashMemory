@@ -27,10 +27,10 @@ class Classifier (object):
 	def __hash__(self):
 		return hash(str(self.pars))
 
-	def classify(self, model, classfy_times, time_step, noise , target_value):
+	def classify(self, model, classfy_times, time_step, noise, target_value):
 		target_var = T.irow('y')
 
-		input_matrix = [model.updateState(classfy_times, time_step)]
+		input_matrix = [model.updateState(classfy_times, time_step, noise)]
 
 		# create loss function
 		#prediction = lasagne.layers.get_output(self.network)
