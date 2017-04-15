@@ -132,7 +132,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			x = LpVariable('x'+str(i), 0, 0.5)
 			variables.append(x)
 
-		v = LpVariable("v") # what is this 100 value? 
+		v = LpVariable("v")
 
 		# Objective 
 		prob += v 
@@ -151,7 +151,6 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			acc += x
 		prob += acc == 0.5
 
-
 		GLPK().solve(prob)
 		print ('------------------Best Response1 calculating -------------------------')
 		response = MixedModel()
@@ -163,7 +162,6 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 						response.pars_percentage[models_top10[i]] += v.varValue
 					else:
 						response.pars_percentage[models_top10[i]] = v.varValue
-					# print (w.value, ' = ', v.varValue)
 
 		print(response)
 		return response
@@ -178,7 +176,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			y = LpVariable('y'+str(i), 0, 1)
 			variables.append(y)
 
-		v = LpVariable("v") # what is this 100 value? 
+		v = LpVariable("v")
 
 		# Objective 
 		prob += v 
@@ -203,7 +201,6 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			acc += y
 		prob += acc == 1
 
-
 		GLPK().solve(prob)
 		print ('------------------Best Response2 calculating -------------------------')
 		response = MixedClassifier()
@@ -215,9 +212,8 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 						response.pars_percentage[classifiers_top10[i]] += v.varValue
 					else:
 						response.pars_percentage[classifiers_top10[i]] = v.varValue
-					# print (w.value, ' = ', v.varValue)
 		return response
-
+	
 	def nash(modelAgent,classifierAgent,models,classifiers,car_following_model):
 		# Create a payoff matrix for top10 models
 		matrix1 = []
@@ -263,10 +259,6 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 
 		if  p1[0] < 0.25 and p2[0] > 0.25 and p2[1] > 0.25:
 			print('----Best Response Found----')
-			print(len(modelAgent.piN.support()))
-			print(len(modelAgent.piN.not_support()))
-			print(len(classifierAgent.piN.support()))
-			print(len(classifierAgent.piN.not_support()))
 			modelAgent.W = b1
 			classifierAgent.W = b2
 			modelAgent.updateWMN()
@@ -340,7 +332,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 				x = LpVariable('y'+str(i), 0, 1)
 				variables.append(x)
 
-			v2 = LpVariable("v2") # what is this 100 value? 
+			v2 = LpVariable("v2")
 
 			# Objective 
 			prob2 += v2 
@@ -384,22 +376,22 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		else:
 			# No best response
 			print('----No Best Response Found----')
-			#modelset = modelAgent.piN.support()
-			#modelset.add(models[-1])
-			#modelset.add(models[-2])
-			#modelset.add(models[-3])
-			#models[:] = list(modelset)
 			models[:] = list(modelAgent.piN.support())
 			#print(len(models))
 
-			
-			#classifierset = classifierAgent.piN.support()
-			#classifierset.add(classifiers[-1])
-			#classifierset.add(classifiers[-2])
-			#classifierset.add(classifiers[-3])
-			#classifiers[:] = list(classifierset)
 			classifiers[:] = list(classifierAgent.piN.support())
 			#print(len(classifiers))
+
+	def noNash(models,classifiers):
+		models_top5 = []
+		for i in range(len(models)-5,len(models)):
+			models_top5.append(models[i])
+		models[:] = models_top5
+			
+		classifiers_top5 = []
+		for i in range(len(classifiers)-5,len(classifiers)):
+			classifiers_top5.append(classifiers[i])
+		classifiers[:] = classifiers_top5
 
 	def drawPlots(classifiers,models,car_following_model,iteration,plots,l1,l2,l3,l4,l5,l6,l7,l8,l9,l,lt):
 		# Pars Covergent Plot
@@ -519,7 +511,6 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 	l7 = []
 	l8 = []
 	l9 = []
-	l10 = []
 	lt = []
 
 	print(len(modelAgent.piN.support()))
@@ -550,16 +541,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 				c.fitness = 0
 
 		# No Nash Memory
-		#models_top5 = []
-		#for i in range(len(models)-5,len(models)):
-		#	models_top5.append(models[i])
-		#models[:] = models_top5
-			
-		#classifiers_top5 = []
-		#for i in range(len(classifiers)-5,len(classifiers)):
-		#	classifiers_top5.append(classifiers[i])
-		#classifiers[:] = classifiers_top5
-
+		# noNash(models,classifiers)
 
 		# Nash Memory
 		nash(modelAgent,classifierAgent,models,classifiers,car_following_model)
@@ -568,17 +550,11 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 	pp = PdfPages('5-500-1-20-False-10-20h-WithNash.pdf')
 	plt.savefig(pp, format='pdf')
 	pp.close()
-	#print(len(modelAgent.piN.support()))
-	#print(len(modelAgent.piN.not_support()))
-	#print(len(classifierAgent.piN.support()))
-	#print(len(classifierAgent.piN.not_support()))
+	#print(modelAgent.piN.support())
 	print('---------------- End -----------------')
-	
-
 
 def main():
 	print('-------------- Start ----------------')
-
 	model_number = 5
 	classifier_number = 5
 	iteration_round = 500
@@ -593,6 +569,3 @@ def main():
 
 if __name__ == "__main__":
 	main()
-
-
-# searchBEST/nash/

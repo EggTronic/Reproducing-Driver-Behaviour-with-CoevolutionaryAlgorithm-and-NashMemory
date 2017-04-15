@@ -45,9 +45,6 @@ class Model (object):
 			if (time_head_way <= 3.5) and (time_head_way > 0.5):
 				self.behaviour.append(1)
 				#print('Follow')
-				# print(self.pars)
-				# print(self.state.follower.speed)
-				# print(self.state.distanceDiff())
 				if (self.state.follower.speed >= self.state.leader.speed):
 					self.state.follower.acceleration = (self.pars[0]*math.pow(self.state.follower.speed, self.pars[1])*self.state.speedDiff())/math.pow(self.state.distanceDiff(), self.pars[2])
 				else:

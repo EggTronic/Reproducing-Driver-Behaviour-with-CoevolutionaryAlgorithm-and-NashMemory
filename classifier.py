@@ -56,8 +56,6 @@ class Classifier (object):
 		test_prediction = lasagne.layers.get_output(self.network, deterministic=True)
 		predict_fn = theano.function([self.input_var], test_prediction)	
 		out_put = predict_fn(input_matrix)
-
-		print(out_put)
 		judge = out_put[0][0]
 
 		print(judge)
