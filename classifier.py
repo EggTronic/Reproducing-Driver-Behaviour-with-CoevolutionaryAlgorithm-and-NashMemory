@@ -11,10 +11,15 @@ import theano.tensor as T
 import lasagne
 from model import *
 
-class Classifier (object):
+class Classifier (object):	
 	def __init__ (self):
-		self.input_var = T.frow()
-		self.network = lasagne.layers.InputLayer((None,100),self.input_var)
+
+		#self.input_var = T.ftensor3()
+		#self.network = lasagne.layers.InputLayer((None,20,5),self.input_var)
+		#self.network = lasagne.layers.RecurrentLayer(self.network, num_units=20, nonlinearity=lasagne.nonlinearities.sigmoid)
+
+		self.input_var = T.ftensor3()
+		self.network = lasagne.layers.InputLayer((None,20,5),self.input_var)
 		self.network = lasagne.layers.DenseLayer(self.network, num_units=20, nonlinearity=lasagne.nonlinearities.sigmoid)
 		self.network = lasagne.layers.DenseLayer(self.network, num_units=1, nonlinearity=lasagne.nonlinearities.sigmoid)
 		self.pars = lasagne.layers.get_all_params(self.network, trainable=True)

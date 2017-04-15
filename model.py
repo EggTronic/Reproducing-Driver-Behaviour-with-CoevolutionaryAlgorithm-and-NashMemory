@@ -15,7 +15,6 @@ class Model (object):
 		self.survival_chance = 3
 		self.state = State()
 		self.behaviour = []
-		self.accelerations = []
 
 	def __eq__(self, other): 
 		return (self.pars == other.pars)
@@ -25,11 +24,9 @@ class Model (object):
 
 	def updateState(self, classfy_times, time_step, noise):
 		self.behaviour = []
-		self.accelerations = []
 		count = 0
 		input_matrix = []
 		while count < classfy_times:
-			input_row = []	
 			if self.state.follower.speed == 0:
 				time_head_way = 6
 			else:
@@ -72,21 +69,22 @@ class Model (object):
 					deceleration2 = self.state.leader.acceleration + 0.25*deceleration1
 				self.state.follower.acceleration = min(deceleration1, deceleration2)
 
-			self.accelerations.append(self.state.follower.acceleration)
 			self.state.update(time_step)
+
+			input_row = []	
 			if noise == True:
-				input_matrix.append(np.float32(self.state.leader.speed*random.uniform(0.95,1.05)))
-				input_matrix.append(np.float32(self.state.leader.position*random.uniform(0.95,1.05)))
-				input_matrix.append(np.float32(self.state.follower.speed*random.uniform(0.95,1.05)))
-				input_matrix.append(np.float32(self.state.follower.acceleration*random.uniform(0.95,1.05)))
-				input_matrix.append(np.float32(self.state.follower.position*random.uniform(0.95,1.05)))
+				input_row.append(np.float32(self.state.leader.speed*random.uniform(0.95,1.05)))
+				input_row.append(np.float32(self.state.leader.position*random.uniform(0.95,1.05)))
+				input_row.append(np.float32(self.state.follower.speed*random.uniform(0.95,1.05)))
+				input_row.append(np.float32(self.state.follower.acceleration*random.uniform(0.95,1.05)))
+				input_row.append(np.float32(self.state.follower.position*random.uniform(0.95,1.05)))
 			else:
-				input_matrix.append(np.float32(self.state.leader.speed))
-				input_matrix.append(np.float32(self.state.leader.position))
-				input_matrix.append(np.float32(self.state.follower.speed))
-				input_matrix.append(np.float32(self.state.follower.acceleration))
-				input_matrix.append(np.float32(self.state.follower.position))
-			#input_matrix.append(input_row)
+				input_row.append(np.float32(self.state.leader.speed))
+				input_row.append(np.float32(self.state.leader.position))
+				input_row.append(np.float32(self.state.follower.speed))
+				input_row.append(np.float32(self.state.follower.acceleration))
+				input_row.append(np.float32(self.state.follower.position))
+			input_matrix.append(input_row)
 			count += 1
 			
 		self.state = State()

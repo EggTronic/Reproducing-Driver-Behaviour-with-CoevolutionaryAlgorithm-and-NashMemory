@@ -83,8 +83,6 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 				else:
 					m.fitness += 1
 
-
-
 	def sort(models,classifiers):
 		classifiers.sort(key=operator.attrgetter('fitness'))  
 		models.sort(key=operator.attrgetter('fitness'))  		
@@ -451,7 +449,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		p1.plot(lt, l5)
 		p1.plot(lt, l6)
 		p1.plot(lt, l)
-		p1.legend(['par1','par2','par3','par4','par5','par6','pars'])
+		p1.legend(['par1','par2','par3','par4','par5','par6','pars'],bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 
 		# Classifier Covergent Plot
 		judge_sum1 = 0
@@ -551,17 +549,29 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			for c in classifiers:
 				c.fitness = 0
 
+		# No Nash Memory
+		#models_top5 = []
+		#for i in range(len(models)-5,len(models)):
+		#	models_top5.append(models[i])
+		#models[:] = models_top5
+			
+		#classifiers_top5 = []
+		#for i in range(len(classifiers)-5,len(classifiers)):
+		#	classifiers_top5.append(classifiers[i])
+		#classifiers[:] = classifiers_top5
+
+
 		# Nash Memory
 		nash(modelAgent,classifierAgent,models,classifiers,car_following_model)
 		drawPlots(classifiers,models,car_following_model,count,plots,l1,l2,l3,l4,l5,l6,l7,l8,l9,l,lt)
 
-	pp = PdfPages('5-200-1-20-False-10-10h.pdf')
+	pp = PdfPages('5-500-1-20-False-10-20h-WithNash.pdf')
 	plt.savefig(pp, format='pdf')
 	pp.close()
-	print(len(modelAgent.piN.support()))
-	print(len(modelAgent.piN.not_support()))
-	print(len(classifierAgent.piN.support()))
-	print(len(classifierAgent.piN.not_support()))
+	#print(len(modelAgent.piN.support()))
+	#print(len(modelAgent.piN.not_support()))
+	#print(len(classifierAgent.piN.support()))
+	#print(len(classifierAgent.piN.not_support()))
 	print('---------------- End -----------------')
 	
 
@@ -571,7 +581,7 @@ def main():
 
 	model_number = 5
 	classifier_number = 5
-	iteration_round = 200
+	iteration_round = 500
 	time_step = 1
 	classfy_times = 20
 	noise = False
