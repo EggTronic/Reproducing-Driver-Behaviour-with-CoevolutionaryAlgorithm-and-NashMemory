@@ -32,12 +32,3 @@ class Agent:
 		self.WMN |= self.M 
 		if self.W != None:
 			self.WMN |= self.W.support()
-		
-	#def random_generate(self):
-		#if name == 'model':
-			#m = MixedModel()
-		#else:
-			#m = MixedClassifier()
-		#m.assign(self.size)
-		#return m
-

@@ -33,11 +33,11 @@ class Classifier (object):
 		return hash(str(self.pars))
 
 	def classify(self, model, classfy_times, time_step, noise, target_value):
-		target_var = T.irow('y')
-
 		input_matrix = [model.updateState(classfy_times, time_step, noise)]
-
+		
 		# create loss function
+		# target_var = T.irow('y')
+
 		#prediction = lasagne.layers.get_output(self.network)
 		#loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
 		#loss = loss.mean() + 1e-4 * lasagne.regularization.regularize_network_params(self.network, lasagne.regularization.l2)

@@ -18,7 +18,6 @@ import numpy as np
 
 def start(model_number, classifier_number, iteration_round, classfy_times, time_step, noise, mutate_number, car_following_model):
 	def mutate_new_model(models):
-
 		m1 = models[random.randrange(0,len(models))]
 		m2 = models[random.randrange(0,len(models))]
 		n1 = random.normalvariate(0, 1)
@@ -31,7 +30,6 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		for i in range(len(m1.pars)):
 			temp = (m1.pars[i] + m2.pars[i])/2
 			pars2.append(temp)
-
 			temp = random.randrange(2)
 			if temp == 0:
 				ms2.append(m1.ms[i])
@@ -45,13 +43,11 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			n2 = random.normalvariate(0, 1)
 			temp = ms2[i]*math.exp(r1*n1+r2*n2)
 			ms3.append(temp)
-
 			temp = pars2[i]+ms3[i]*random.normalvariate(0, 1)
 			if temp <=3 and temp >=-3:
 				pars3.append(temp)
 			else:
 				pars3.append(pars2[i])
-
 
 		m3 = Model()
 		m3.pars = pars3
@@ -123,9 +119,9 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		return payoff
 
 	def searchBest1(models_top10,Matrix,classifierAgent):
-
+		# Models try to minimize the payoff
 		prob = LpProblem("solve" + str(uuid.uuid4()), LpMinimize) 
-		
+	
 		# define size-many variables
 		variables = []
 		for i in range (len(Matrix)):
@@ -166,8 +162,9 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		print(response)
 		return response
 
+    
 	def searchBest2(classifiers_top10,Matrix,modelAgent):
-
+		# Classifiers try to maximize the payoff
 		prob = LpProblem("solve" + str(uuid.uuid4()), LpMaximize) 
 		
 		# define size-many variables
@@ -259,12 +256,13 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 
 		if  p1[0] < 0.25 and p2[0] > 0.25 and p2[1] > 0.25:
 			print('----Best Response Found----')
+			# Update Parallel Nash Memory Sets
 			modelAgent.W = b1
 			classifierAgent.W = b2
 			modelAgent.updateWMN()
 			classifierAgent.updateWMN()
 
-			size = len(modelAgent.WMN)
+			# Generate a payoff matrix for supports
 			matrix = []
 			for m in modelAgent.WMN:
 				row = [] # a row
@@ -482,16 +480,19 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 	model_init.append(Model())
 	model_init.append(Model())
 	#model_init.append(car_following_model)
-
+    
+    # Initialize first population of classifiers and models
 	for n in range(model_number):
 		models.append(Model())
 		mutate_new_model(model_init)
 	for n in range(classifier_number):
 		classifiers.append(Classifier())
 
+    # Initialize model agent and classifier agent
 	modelAgent = Agent(model_init,'model')
 	classifierAgent = Agent(classifiers,'classifier')
 
+    # Initialize plot settings
 	f, (p1, p2, p3) = plt.subplots(3, sharex=True)
 	plt.xlim(1,iteration_round)
 	plots = plt.gcf()
@@ -501,6 +502,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 	plots.show()
 	plots.canvas.draw()
 
+	# Initialize plot parameters
 	l = []
 	l1 = []
 	l2 = []
@@ -513,10 +515,6 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 	l9 = []
 	lt = []
 
-	print(len(modelAgent.piN.support()))
-	print(len(modelAgent.piN.not_support()))
-	print(len(classifierAgent.piN.support()))
-	print(len(classifierAgent.piN.not_support()))
 	# Run iteration
 	while count < iteration_round:
 		count += 1
@@ -547,6 +545,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		nash(modelAgent,classifierAgent,models,classifiers,car_following_model)
 		drawPlots(classifiers,models,car_following_model,count,plots,l1,l2,l3,l4,l5,l6,l7,l8,l9,l,lt)
 
+    # Save plot
 	pp = PdfPages('5-500-1-20-False-10-20h-WithNash.pdf')
 	plt.savefig(pp, format='pdf')
 	pp.close()
@@ -555,6 +554,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 
 def main():
 	print('-------------- Start ----------------')
+    # Initialize basic settings
 	model_number = 5
 	classifier_number = 5
 	iteration_round = 500
@@ -564,7 +564,7 @@ def main():
 	mutate_number = 15
 	car_following_model = Model()
 	car_following_model.pars = [2.15,-1.67,-0.89,1.55,1.08,1.65]
-
+    # Run iteration
 	start(model_number, classifier_number, iteration_round, classfy_times, time_step, noise, mutate_number, car_following_model)
 
 if __name__ == "__main__":
