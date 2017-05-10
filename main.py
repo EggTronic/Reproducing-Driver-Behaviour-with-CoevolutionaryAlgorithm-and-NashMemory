@@ -16,8 +16,10 @@ import string
 import matplotlib.pyplot as plt
 import numpy as np
 
-def start(model_number, classifier_number, iteration_round, classfy_times, time_step, noise, mutate_number, car_following_model):
+def start(model_number, classifier_number, iteration_round, classfy_times, time_step, noise, hidden_nodes, mutate_number, car_following_model, nash):
+	# Mutation method for models
 	def mutate_new_model(models):
+		# Random select 2 models (m1, m2) to mutate m3
 		m1 = models[random.randrange(0,len(models))]
 		m2 = models[random.randrange(0,len(models))]
 		n1 = random.normalvariate(0, 1)
@@ -30,6 +32,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		for i in range(len(m1.pars)):
 			temp = (m1.pars[i] + m2.pars[i])/2
 			pars2.append(temp)
+
 			temp = random.randrange(2)
 			if temp == 0:
 				ms2.append(m1.ms[i])
@@ -43,11 +46,13 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			n2 = random.normalvariate(0, 1)
 			temp = ms2[i]*math.exp(r1*n1+r2*n2)
 			ms3.append(temp)
+
 			temp = pars2[i]+ms3[i]*random.normalvariate(0, 1)
 			if temp <=3 and temp >=-3:
 				pars3.append(temp)
 			else:
 				pars3.append(pars2[i])
+
 
 		m3 = Model()
 		m3.pars = pars3
@@ -55,10 +60,13 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 
 		models.append(m3)
 
+	# Mutation method for classifiers
 	def mutate_new_classifier(classifiers):
-		c = Classifier()
+		# Randomly generate new classifiers
+		c = Classifier(hidden_nodes)
 		classifiers.append(c)
-
+    
+    # Fitness calculation method
 	def calculate_fitness(models,classifiers):
 		i = 0
 		for c in classifiers:
@@ -79,12 +87,14 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 				else:
 					m.fitness += 1
 
+
+	# Sort models and classifiers by fitness
 	def sort(models,classifiers):
 		classifiers.sort(key=operator.attrgetter('fitness'))  
 		models.sort(key=operator.attrgetter('fitness'))  		
 
 	def payoff(mixedModel,mixedClassifier,car_following_model):
-		# Generate payoff matrix
+		# Generate payoff matrix for mixedModel/Car Following Model against mixedClassifier
 		payoff_matrix = []
 		for m in mixedModel.support():
 			r = []
@@ -118,10 +128,10 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 
 		return payoff
 
+	# Search best response for models
 	def searchBest1(models_top10,Matrix,classifierAgent):
-		# Models try to minimize the payoff
 		prob = LpProblem("solve" + str(uuid.uuid4()), LpMinimize) 
-	
+		
 		# define size-many variables
 		variables = []
 		for i in range (len(Matrix)):
@@ -140,7 +150,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			for j, c in zip(range(len(classifierAgent.piN.support())),classifierAgent.piN.support()):
 				ac += Matrix[i][j] * classifierAgent.piN.pars_percentage[c]
 			acc += ac * variables[i]
-		prob += v == acc
+		prob += v == acc # models always try to minimize this value
 
 		acc = 0
 		for x in variables: 
@@ -162,9 +172,8 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		print(response)
 		return response
 
-    
+	# Search best response for classifiers
 	def searchBest2(classifiers_top10,Matrix,modelAgent):
-		# Classifiers try to maximize the payoff
 		prob = LpProblem("solve" + str(uuid.uuid4()), LpMaximize) 
 		
 		# define size-many variables
@@ -180,18 +189,20 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 
 		# Constraints
 		acc = 0
+		# Constrain given by fake models
 		for i, m in zip(range(len(modelAgent.piN.support())),modelAgent.piN.support()):
 			ac = 0
 			for j in range(len(classifiers_top10)):
 				ac += Matrix[i][j] * variables[j]
 			acc += ac * modelAgent.piN.pars_percentage[m]
 		ac = 0
+		# Constrain given by Car Following Model
 		for j in range(len(classifiers_top10)):
 			result = classifiers_top10[j].classify(car_following_model,classfy_times,time_step,noise,1)
 			if result >= 0.5:
 				ac += 1*variables[j]
 		acc += ac * 0.5
-		prob += v == acc
+		prob += v == acc # classifiers always want to maximize this value 
 
 		acc = 0
 		for y in variables: 
@@ -210,7 +221,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 					else:
 						response.pars_percentage[classifiers_top10[i]] = v.varValue
 		return response
-	
+
 	def nash(modelAgent,classifierAgent,models,classifiers,car_following_model):
 		# Create a payoff matrix for top10 models
 		matrix1 = []
@@ -254,15 +265,22 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 
 		print('---------over all payoff is ',p1,p2,' ---------')
 
+		# Evaluation of best responses
 		if  p1[0] < 0.25 and p2[0] > 0.25 and p2[1] > 0.25:
 			print('----Best Response Found----')
-			# Update Parallel Nash Memory Sets
+			#print(len(modelAgent.piN.support()))
+			#print(len(modelAgent.piN.not_support()))
+			#print(len(classifierAgent.piN.support()))
+			#print(len(classifierAgent.piN.not_support()))
+
+			# Update WMN set
 			modelAgent.W = b1
 			classifierAgent.W = b2
 			modelAgent.updateWMN()
 			classifierAgent.updateWMN()
 
-			# Generate a payoff matrix for supports
+			# Create a payoff matrix for WMN set of models against WMN set of classifiers 
+			size = len(modelAgent.WMN)
 			matrix = []
 			for m in modelAgent.WMN:
 				row = [] # a row
@@ -283,7 +301,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 					row.append(0)
 			matrix.append(row)
 
-			# Solve model agent
+			# Solve linear programming for model agent: models are always try to minimize the payoff
 			prob = LpProblem("solve" + str(uuid.uuid4()), LpMinimize)
 
 			# Define size-many variables
@@ -303,7 +321,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 				for i in range(len(modelAgent.WMN)):
 					acc += matrix[i][j] * variables[i]
 				acc += matrix[len(modelAgent.WMN)][j] * 0.5
-				prob += v >= acc
+				prob += v >= acc # classifiers are always try to maximize this value
 
 			acc = 0
 			for x in variables: 
@@ -311,7 +329,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			prob += acc == 0.5
 
 			GLPK().solve(prob)
-			print ('------------------solving 1-------------------------')
+			print ('------------------solving model agent-------------------------')
 			# Solution
 			modelAgent.piN.reset()
 			for v in prob.variables():
@@ -319,10 +337,11 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 					if v.name == 'x'+ str(i):
 						modelAgent.piN.pars_percentage[m] = v.varValue
 
+			# Update WMN set for models
 			modelAgent.updateWMN()
 
-			# Solve Classifier Agent
-			prob2 = LpProblem("solve2" + str(uuid.uuid4()), LpMaximize) # the classifier agent is always want to maximise
+			# Solve linear programming for classifier agent: classifiers are always try to maximise the payoff
+			prob2 = LpProblem("solve2" + str(uuid.uuid4()), LpMaximize) 
 
 			# define size-many variables
 			variables = []
@@ -344,7 +363,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 				acc = 0
 				for j in range(len(classifierAgent.WMN)):
 					acc += matrix[i][j] * variables[j] + ac
-				prob2 += v2 <= acc # the model agent will always want to minimize
+				prob2 += v2 <= acc # models are always try to minimize this value
 
 			acc = 0
 			for x in variables: 
@@ -352,7 +371,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			prob2 += acc == 1
 
 			GLPK().solve(prob2)
-			print ('------------------solving 2-------------------------')
+			print ('------------------solving classifier agent-------------------------')
 			# Solution
 			classifierAgent.piN.reset() 
 			for v in prob2.variables():
@@ -360,27 +379,33 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 					if v.name == 'y'+ str(i):
 						classifierAgent.piN.pars_percentage[c] = v.varValue
 
+			# Update WMN set for classifiers
 			classifierAgent.updateWMN()
 
-			models[:] = list(modelAgent.piN.support())
-			print(len(models))
-			classifiers[:] = list(classifierAgent.piN.support())
-			print(len(classifiers))
-
-			for m in models:
-				print(m.pars)
-			for c in classifiers:
-				print(c.pars)
-		else:
-			# No best response
-			print('----No Best Response Found----')
+			# Update list of models and classifiers with only the support of them
 			models[:] = list(modelAgent.piN.support())
 			#print(len(models))
-
 			classifiers[:] = list(classifierAgent.piN.support())
 			#print(len(classifiers))
 
+			#for m in models:
+				#print(m.pars)
+			#for c in classifiers:
+				#print(c.pars)
+
+		else:
+			# No best response
+			print('----No Best Response Found----')
+			# Update list of models and classifiers with only the support of them
+			models[:] = list(modelAgent.piN.support())
+			classifiers[:] = list(classifierAgent.piN.support())
+			#print(len(models))
+			#print(len(classifiers))
+
+	# No nash memory applied
 	def noNash(models,classifiers):
+		# Update list of models and classifiers with top five fitness
+
 		models_top5 = []
 		for i in range(len(models)-5,len(models)):
 			models_top5.append(models[i])
@@ -391,8 +416,10 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			classifiers_top5.append(classifiers[i])
 		classifiers[:] = classifiers_top5
 
+	# Draw experiment plots
 	def drawPlots(classifiers,models,car_following_model,iteration,plots,l1,l2,l3,l4,l5,l6,l7,l8,l9,l,lt):
 		# Pars Covergent Plot
+		# Prepare datasets
 		sum_par1 = 0
 		sum_par2 = 0
 		sum_par3 = 0
@@ -432,6 +459,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		l.append(variance)
 		lt.append(iteration)
 
+		# Initialize plots with datasets
 		p1.plot(lt, l1)
 		p1.plot(lt, l2)
 		p1.plot(lt, l3)
@@ -442,36 +470,40 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 		p1.legend(['par1','par2','par3','par4','par5','par6','pars'],bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 
 		# Classifier Covergent Plot
+		# Prepare datasets
 		judge_sum1 = 0
 		judge_sum2 = 0
 		for c in classifiers:
 			judge_sum1 += c.classify(car_following_model,classfy_times,time_step,noise,1)
 			for m in models:
 				judge_sum2 += c.classify(m,classfy_times,time_step,noise,0)
-
 		judge_avg1 = judge_sum1/len(classifiers)
 		judge_avg2 = judge_sum2/(len(classifiers)*len(models))
-
 		l7.append(judge_avg1)
 		l8.append(judge_avg2)
 
+		# Initialize plots with datasets
 		p2.plot(lt,l7,color='blue')
 		p2.plot(lt,l8,color='red')
 		p2.legend(['real model','fake model'])
 
+		# Behavior Covergent Plot
+		# Prepare datasets
 		behaviour_variacne = 0
 		for m in models:
 			for b1,b2 in zip(m.behaviour,car_following_model.behaviour):
 				behaviour_variacne += math.pow((b1-b2),2)
-
 		l9.append(behaviour_variacne/len(models))
+
+		# Initialize plots with datasets
 		p3.plot(lt,l9,color='black')
 		p3.legend(['Behaviour Variacne'])
 
+		# Update plots
 		plots.canvas.draw()
 		plt.pause(0.0001)
 
-	# Initialize
+	# Basic Initialize 
 	print('-------------- Initialize ----------------')
 	count = 0
 	models = []
@@ -480,19 +512,17 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 	model_init.append(Model())
 	model_init.append(Model())
 	#model_init.append(car_following_model)
-    
-    # Initialize first population of classifiers and models
+
+	# Initialize Agents
 	for n in range(model_number):
 		models.append(Model())
 		mutate_new_model(model_init)
 	for n in range(classifier_number):
-		classifiers.append(Classifier())
-
-    # Initialize model agent and classifier agent
+		classifiers.append(Classifier(hidden_nodes))
 	modelAgent = Agent(model_init,'model')
 	classifierAgent = Agent(classifiers,'classifier')
 
-    # Initialize plot settings
+	# Initialize plots
 	f, (p1, p2, p3) = plt.subplots(3, sharex=True)
 	plt.xlim(1,iteration_round)
 	plots = plt.gcf()
@@ -502,7 +532,7 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 	plots.show()
 	plots.canvas.draw()
 
-	# Initialize plot parameters
+	# Initialize datasets for plots
 	l = []
 	l1 = []
 	l2 = []
@@ -515,7 +545,12 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 	l9 = []
 	lt = []
 
-	# Run iteration
+	#print(len(modelAgent.piN.support()))
+	#print(len(modelAgent.piN.not_support()))
+	#print(len(classifierAgent.piN.support()))
+	#print(len(classifierAgent.piN.not_support()))
+
+	# Start iteration
 	while count < iteration_round:
 		count += 1
 		print('-------------- Iteration',count,' ----------------')
@@ -538,15 +573,18 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 			for c in classifiers:
 				c.fitness = 0
 
-		# No Nash Memory
-		# noNash(models,classifiers)
-
-		# Nash Memory
-		nash(modelAgent,classifierAgent,models,classifiers,car_following_model)
+		if nash == False:
+			# No Nash Memory
+			noNash(models,classifiers)
+		else:
+			# Nash Memory
+			nash(modelAgent,classifierAgent,models,classifiers,car_following_model)
+		
+		# Draw experiment plots
 		drawPlots(classifiers,models,car_following_model,count,plots,l1,l2,l3,l4,l5,l6,l7,l8,l9,l,lt)
-
-    # Save plot
-	pp = PdfPages('5-500-1-20-False-10-20h-WithNash.pdf')
+    
+    # Save experiment plots
+	pp = PdfPages('Specify_Experiment_Name_Here.pdf')
 	plt.savefig(pp, format='pdf')
 	pp.close()
 	#print(modelAgent.piN.support())
@@ -554,18 +592,22 @@ def start(model_number, classifier_number, iteration_round, classfy_times, time_
 
 def main():
 	print('-------------- Start ----------------')
-    # Initialize basic settings
+    
+    # Initialize general experiment settings here
 	model_number = 5
 	classifier_number = 5
 	iteration_round = 500
 	time_step = 1
 	classfy_times = 20
+	hidden_nodes = 20
 	noise = False
 	mutate_number = 15
 	car_following_model = Model()
 	car_following_model.pars = [2.15,-1.67,-0.89,1.55,1.08,1.65]
-    # Run iteration
-	start(model_number, classifier_number, iteration_round, classfy_times, time_step, noise, mutate_number, car_following_model)
+	nash = True
+
+	# Start experiment
+	start(model_number, classifier_number, iteration_round, classfy_times, time_step, noise, hidden_nodes, mutate_number, car_following_model, nash)
 
 if __name__ == "__main__":
 	main()

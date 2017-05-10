@@ -12,7 +12,6 @@ class Model (object):
 		self.pars = [0,0,0,0,0,0]
 		self.ms = [1,1,1,1,1,1]
 		self.fitness = 0
-		self.survival_chance = 3
 		self.state = State()
 		self.behaviour = []
 
@@ -26,15 +25,18 @@ class Model (object):
 		self.behaviour = []
 		count = 0
 		input_matrix = []
+
+		# Calculate time head way
 		while count < classfy_times:
 			if self.state.follower.speed == 0:
 				time_head_way = 6
 			else:
 				time_head_way = (self.state.leader.position - self.state.follower.position)/self.state.follower.speed
+
 			# Free Driving
 			if time_head_way > 3.5:
 				self.behaviour.append(0)
-				#print('Free')
+				# print('Free')
 				if (self.state.follower.speed < 40):
 					self.state.follower.acceleration = self.getNormalAcceleration()
 				else:
@@ -44,17 +46,19 @@ class Model (object):
 			# Car Following
 			if (time_head_way <= 3.5) and (time_head_way > 0.5):
 				self.behaviour.append(1)
-				#print('Follow')
+				# print('Follow')
+				# print(self.pars)
+				# print(self.state.follower.speed)
+				# print(self.state.distanceDiff())
 				if (self.state.follower.speed >= self.state.leader.speed):
 					self.state.follower.acceleration = (self.pars[0]*math.pow(self.state.follower.speed, self.pars[1])*self.state.speedDiff())/math.pow(self.state.distanceDiff(), self.pars[2])
 				else:
 					self.state.follower.acceleration = (self.pars[3]*math.pow(self.state.follower.speed, self.pars[4])*self.state.speedDiff())/math.pow(self.state.distanceDiff(), self.pars[5])
 
-
 			# Emergency
 			if (time_head_way <= 0.5):
 				self.behaviour.append(2)
-				#print('Emergency')
+				# print('Emergency')
 				deceleration1 = self.getNormalDeceleration()
 
 				if (self.state.speedDiff() < 0):
@@ -68,6 +72,7 @@ class Model (object):
 
 			self.state.update(time_step)
 
+			# Preparing datasets to be classified by classifiers
 			input_row = []	
 			if noise == True:
 				input_row.append(np.float32(self.state.leader.speed*random.uniform(0.95,1.05)))
@@ -108,6 +113,7 @@ class Model (object):
 		if (self.state.follower.speed >= 24.4):
 			return -2
 
+# Given a list of models, assign probablities for each individual
 class  MixedModel (object):
 	def __init__ (self):
 		self.pars_percentage = {}

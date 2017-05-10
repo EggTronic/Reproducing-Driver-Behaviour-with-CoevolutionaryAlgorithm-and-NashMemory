@@ -19,8 +19,7 @@ class State (object):
 		else:
 			return (self.leader.position - self.leader.length - self.follower.position)
 
-
-
+	# Based on the time step specified, update both leader and follower's position, speed and acceleration for next time step
 	def update(self, time_step):
 		self.leader.position = self.leader.position + self.leader.speed*time_step + 0.5*self.leader.acceleration*math.pow(time_step, 2)
 		self.leader.speed = self.leader.speed + self.leader.acceleration*time_step

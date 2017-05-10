@@ -2,12 +2,10 @@
 # SD @ Uol
 # danliangchen@gmail.com
 
- 
 from model import *
 from classifier import *
 from pulp import *
 import sys
-#import random
 import uuid
 
 class Agent:

@@ -1,5 +1,4 @@
 # Yang Xu
-
 # SD @ Uol
 # danliangchen@gmail.com
 
@@ -12,15 +11,15 @@ import lasagne
 from model import *
 
 class Classifier (object):	
-	def __init__ (self):
-
+	def __init__ (self, hidden_nodes):
+        #Following are used for self leaning nerual network
 		#self.input_var = T.ftensor3()
 		#self.network = lasagne.layers.InputLayer((None,20,5),self.input_var)
 		#self.network = lasagne.layers.RecurrentLayer(self.network, num_units=20, nonlinearity=lasagne.nonlinearities.sigmoid)
-
+		self.hidden_nodes = hidden_nodes
 		self.input_var = T.ftensor3()
 		self.network = lasagne.layers.InputLayer((None,20,5),self.input_var)
-		self.network = lasagne.layers.DenseLayer(self.network, num_units=20, nonlinearity=lasagne.nonlinearities.sigmoid)
+		self.network = lasagne.layers.DenseLayer(self.network, num_units=self.hidden_nodes, nonlinearity=lasagne.nonlinearities.sigmoid)
 		self.network = lasagne.layers.DenseLayer(self.network, num_units=1, nonlinearity=lasagne.nonlinearities.sigmoid)
 		self.pars = lasagne.layers.get_all_params(self.network, trainable=True)
 		self.fitness = 0
@@ -34,10 +33,10 @@ class Classifier (object):
 
 	def classify(self, model, classfy_times, time_step, noise, target_value):
 		input_matrix = [model.updateState(classfy_times, time_step, noise)]
-		
-		# create loss function
-		# target_var = T.irow('y')
 
+		#Following are used for self leaning nerual network
+		#target_var = T.irow('y')
+		# create loss function
 		#prediction = lasagne.layers.get_output(self.network)
 		#loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
 		#loss = loss.mean() + 1e-4 * lasagne.regularization.regularize_network_params(self.network, lasagne.regularization.l2)
@@ -52,7 +51,7 @@ class Classifier (object):
 		# train network 
 		#loss = train_fn(input_matrix, [[target_value]])
 
-		# use trained network for predictions
+		# use trained network for predictions (give the judgement value here)
 		test_prediction = lasagne.layers.get_output(self.network, deterministic=True)
 		predict_fn = theano.function([self.input_var], test_prediction)	
 		out_put = predict_fn(input_matrix)
@@ -61,6 +60,7 @@ class Classifier (object):
 		print(judge)
 		return judge
 
+# Given a list of classifiers, assign probablities for each individual
 class  MixedClassifier (object):
 	def __init__ (self):
 		self.pars_percentage = {}
