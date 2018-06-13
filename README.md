@@ -1,5 +1,4 @@
-# COMP390
-Co-evolution With Nash-Memory
+# Apply Co-evolution Algorithm With Nash-Memory to recreate driving behavior 
 
   Main:
 
